@@ -104,8 +104,6 @@ export default {
       const index = this.orderBox.findIndex(order => order.id === id)
       if (index !== -1) {
         this.orderBox.splice(index, 1)
-
-        // 刪除後更新 localStorage
         localStorage.setItem('orderBox', JSON.stringify(this.orderBox))
       }
     },
@@ -254,9 +252,9 @@ export default {
         <div class="flex items-center space-x-2">
           <span class="w-12 text-yellow-400">張數</span>
           <div class="flex items-center">
-            <button class="text-white px-3 py-2" @click="decreaseAmount">-</button>
+            <button type="button" class="text-white px-3 py-2" @click="decreaseAmount">-</button>
             <VField type="text" name="amount" min="0" v-model="currentOrder.amount" class="w-12 text-white text-center" @input="handleInput" />
-            <button class="text-white px-3 py-2" @click="currentOrder.amount + 1">+</button>
+            <button type="button" class="text-white px-3 py-2" @click="currentOrder.amount++">+</button>
           </div>
           <span class="ml-auto text-sm">1單位 1000.0股</span>
         </div>
