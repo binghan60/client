@@ -14,7 +14,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: process.env.PORT || 4173, // 使用 Railway 提供的端口，或回退到 4173
-    host: true, // 允許外部訪問
+    port: process.env.PORT || 4173,
+    host: true,
+  },
+  preview: {
+    allowedHosts: ['client-production-7837.up.railway.app', 'localhost'],
   },
 })
