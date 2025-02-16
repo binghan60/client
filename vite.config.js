@@ -14,6 +14,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 4173, // 使用 Railway 提供的端口，或回退到 4173
+    host: true, // 允許外部訪問
   },
 })
