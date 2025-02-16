@@ -15,7 +15,14 @@ export default {
       stockMap: new Map(),
       changedRows: new Set(),
       socket: null,
-      selectedStock: null,
+      selectedStock: {
+        symbol: '',
+        name: '',
+        price: '',
+        originalPrice: '',
+        amountChange: '',
+        change: '',
+      },
       orderBox: [],
       currentOrder: {
         transaction: '',
@@ -68,7 +75,7 @@ export default {
     },
 
     selectStock(stock) {
-      this.selectedStock = stock
+      this.selectedStock = { ...stock }
     },
     onderStock() {
       const mixForm = Object.assign(this.selectedStock, this.currentOrder)
@@ -107,6 +114,16 @@ export default {
         localStorage.setItem('orderBox', JSON.stringify(this.orderBox))
       }
     },
+    cancelSelected() {
+      this.selectedStock = {
+        symbol: '',
+        name: '',
+        price: '',
+        originalPrice: '',
+        amountChange: '',
+        change: '',
+      }
+    },
   },
   computed: {
     soldPrice() {
@@ -140,7 +157,7 @@ export default {
 
 <template>
   <div class="bg-black text-white max-w-7xl mx-auto grid lg:grid-cols-2">
-    <div class="w-full overflow-hidden">
+    <div>
       <div class="grid grid-cols-5 gap-0">
         <!-- 表格頭 -->
         <div class="border border-white px-2 py-2 text-center">名稱</div>
@@ -163,138 +180,133 @@ export default {
         </div>
       </RecycleScroller>
     </div>
-    <div class="w-full">
-      <div class="text-center p-2 border-b border-white">
-        <h3 class="text-xl">{{ selectedStock?.name }}</h3>
-        <h3 class="text-xl">{{ selectedStock?.symbol }}</h3>
-      </div>
-      <VForm @submit="onderStock" class="text-white p-4 w-108 space-y-4 mx-auto">
-        <!-- 交易 -->
-        <div class="flex items-center space-x-2">
-          <span class="w-12">交易</span>
-          <div class="flex space-x-2">
-            <label class="flex items-center">
-              <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="Common" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">整股</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="IntradayOdd" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">盤中零股</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="Od" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">盤後</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="Odd" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">盤後零股</span>
-            </label>
-          </div>
+    <div>
+      <div v-show="selectedStock.symbol != ''">
+        <div class="text-center p-2 border-b border-white">
+          <h3 class="text-xl">{{ selectedStock?.name }}</h3>
+          <h3 class="text-xl">{{ selectedStock?.symbol }}</h3>
         </div>
-        <!-- 類別 -->
-        <div class="flex items-center space-x-2">
-          <span class="w-12">類別</span>
-          <div class="flex space-x-2">
-            <label class="flex items-center">
-              <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="Stock" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">現股</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="Margin" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">融資</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="Short" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">融券</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="SBL" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">借券</span>
-            </label>
+        <VForm @submit="onderStock" class="text-white p-4 lg:w-108 space-y-4 mx-auto">
+          <div class="flex items-center space-x-2">
+            <span class="w-12">交易</span>
+            <div class="flex space-x-2">
+              <label class="flex items-center">
+                <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="Common" />
+                <span class="bg-gray-700 lg:px-3 px-2 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">整股</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="IntradayOdd" />
+                <span class="bg-gray-700 lg:px-3 px-2 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">盤中零股</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="Od" />
+                <span class="bg-gray-700 lg:px-3 px-2 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">盤後</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="transaction" rules="atLeastOneFieldRule:@category,@type,@buySell,@amount" v-model="currentOrder.transaction" class="hidden peer" value="Odd" />
+                <span class="bg-gray-700 lg:px-3 px-2 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">盤後零股</span>
+              </label>
+            </div>
           </div>
-        </div>
+          <div class="flex items-center space-x-2">
+            <span class="w-12">類別</span>
+            <div class="flex space-x-2">
+              <label class="flex items-center">
+                <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="Stock" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">現股</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="Margin" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">融資</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="Short" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">融券</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="category" class="hidden peer" v-model="currentOrder.category" value="SBL" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">借券</span>
+              </label>
+            </div>
+          </div>
 
-        <!-- 種類 -->
-        <div class="flex items-center space-x-2">
-          <span class="w-12">種類</span>
-          <div class="flex space-x-2">
-            <label class="flex items-center">
-              <VField type="radio" name="type" class="hidden peer" v-model="currentOrder.type" value="ROD" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">ROD</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="type" class="hidden peer" v-model="currentOrder.type" value="IOC" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">IOC</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="type" class="hidden peer" v-model="currentOrder.type" value="FOK" />
-              <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">FOK</span>
-            </label>
+          <div class="flex items-center space-x-2">
+            <span class="w-12">種類</span>
+            <div class="flex space-x-2">
+              <label class="flex items-center">
+                <VField type="radio" name="type" class="hidden peer" v-model="currentOrder.type" value="ROD" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">ROD</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="type" class="hidden peer" v-model="currentOrder.type" value="IOC" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">IOC</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="type" class="hidden peer" v-model="currentOrder.type" value="FOK" />
+                <span class="bg-gray-700 px-3 py-2 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">FOK</span>
+              </label>
+            </div>
           </div>
-        </div>
-
-        <!-- 買賣 -->
-        <div class="flex space-x-2">
-          <span class="w-12">買賣</span>
-          <div class="flex space-x-2">
-            <label class="flex items-center">
-              <VField type="radio" name="buySell" class="hidden peer" v-model="currentOrder.buySell" value="buy" />
-              <span class="bg-gray-700 px-3 text-center py-2 w-20 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">買進</span>
-            </label>
-            <label class="flex items-center">
-              <VField type="radio" name="buySell" class="hidden peer" v-model="currentOrder.buySell" value="sell" />
-              <span class="bg-gray-700 text-center px-3 py-2 w-20 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">賣出</span>
-            </label>
+          <div class="flex items-center space-x-2">
+            <span class="w-12">買賣</span>
+            <div class="flex space-x-2">
+              <label class="flex items-center">
+                <VField type="radio" name="buySell" class="hidden peer" v-model="currentOrder.buySell" value="buy" />
+                <span class="bg-gray-700 px-3 text-center py-2 w-20 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">買進</span>
+              </label>
+              <label class="flex items-center">
+                <VField type="radio" name="buySell" class="hidden peer" v-model="currentOrder.buySell" value="sell" />
+                <span class="bg-gray-700 text-center px-3 py-2 w-20 rounded peer-checked:bg-white peer-checked:text-black cursor-pointer">賣出</span>
+              </label>
+            </div>
           </div>
-        </div>
-
-        <!-- 張數 -->
-        <div class="flex items-center space-x-2">
-          <span class="w-12 text-yellow-400">張數</span>
-          <div class="flex items-center">
-            <button type="button" class="text-white px-3 py-2" @click="decreaseAmount">-</button>
-            <VField type="text" name="amount" min="0" v-model="currentOrder.amount" class="w-12 text-white text-center" @input="handleInput" />
-            <button type="button" class="text-white px-3 py-2" @click="currentOrder.amount++">+</button>
+          <div class="flex items-center space-x-2">
+            <span class="w-12 text-yellow-400">張數</span>
+            <div class="flex items-center">
+              <button type="button" class="text-white px-3 py-2 bg-[rgba(30,41,59,0.75)] cursor-pointer" @click="decreaseAmount">-</button>
+              <VField type="text" name="amount" min="0" v-model="currentOrder.amount" class="w-12 text-white text-center" @input="handleInput" />
+              <button type="button" class="text-white px-3 py-2 bg-[rgba(30,41,59,0.75)] cursor-pointer" @click="currentOrder.amount++">+</button>
+            </div>
+            <span class="ml-auto text-sm">1單位 1000.0股</span>
           </div>
-          <span class="ml-auto text-sm">1單位 1000.0股</span>
-        </div>
-        <div class="text-center">
-          <ErrorMessage name="transaction" class="text-sm text-red-500 dark:text-rose-400" />
-        </div>
-
-        <div class="col-span-2 flex justify-around">
-          <button type="button" class="bg-gray-200 text-black py-2 px-8 cursor-pointer">取消</button>
-          <button type="submit" class="bg-red-400 py-2 px-8 cursor-pointer">下單</button>
-        </div>
-      </VForm>
-    </div>
-    <div class="w-full h-[300px] col-span-2">
-      <div class="border border-white text-orange-300 text-center grid grid-cols-9">
-        <div class="">買賣</div>
-        <div class="">動作</div>
-        <div class="">商品</div>
-        <div class="">價格</div>
-        <div class="">數量</div>
-        <div class="">狀態</div>
-        <div class="">交易</div>
-        <div class="">類別</div>
-        <div class="">種類</div>
-      </div>
-      <ul>
-        <li v-for="order in orderBox" class="grid grid-cols-9 border-b border-white py-2" :key="order.id">
-          <div class="text-center">{{ order.buySell === 'buy' ? '買進' : '賣出' }}</div>
           <div class="text-center">
-            <button class="bg-gray-300 px-2 text-black rounded-lg cursor-pointer" type="button" @click="deleteOrder(order.id)">刪單</button>
+            <ErrorMessage name="transaction" class="text-sm text-red-500 dark:text-rose-400" />
           </div>
-          <div class="text-center">{{ order.name }}</div>
-          <div class="text-center">{{ order.price }}</div>
-          <div class="text-center">{{ order.amount }}</div>
-          <div class="text-center">未成交</div>
-          <div class="text-center">{{ translateTransaction(order.transaction) }}</div>
-          <div class="text-center">{{ translateCategory(order.category) }}</div>
-          <div class="text-center">{{ order.type }}</div>
-        </li>
-      </ul>
+          <div class="col-span-2 flex justify-around">
+            <button type="button" class="bg-gray-200 text-black py-2 px-8 cursor-pointer" @click="cancelSelected">取消</button>
+            <button type="submit" class="bg-red-400 py-2 px-8 cursor-pointer">下單</button>
+          </div>
+        </VForm>
+      </div>
+    </div>
+    <div class="lg:col-span-2 overflow-x-auto historyBox h-[393px]">
+      <div class="border border-white text-orange-300 text-center grid grid-cols-8 min-w-max whitespace-nowrap">
+        <div>買賣</div>
+        <div>動作</div>
+        <div>商品</div>
+        <div>價格</div>
+        <div>數量</div>
+        <div>交易</div>
+        <div>類別</div>
+        <div>種類</div>
+      </div>
+      <template v-if="orderBox.length > 0">
+        <ul>
+          <li v-for="order in orderBox" class="grid grid-cols-8 border-b border-white py-2" :key="order.id">
+            <div class="text-center">{{ order.buySell === 'buy' ? '買進' : '賣出' }}</div>
+            <div class="text-center">
+              <button class="bg-gray-300 px-2 text-black rounded-lg cursor-pointer" type="button" @click="deleteOrder(order.id)">刪單</button>
+            </div>
+            <div class="text-center">{{ order.name }}</div>
+            <div class="text-center">{{ order.price }}</div>
+            <div class="text-center">{{ order.amount }}</div>
+            <div class="text-center">{{ translateTransaction(order.transaction) }}</div>
+            <div class="text-center">{{ translateCategory(order.category) }}</div>
+            <div class="text-center">{{ order.type }}</div>
+          </li>
+        </ul>
+      </template>
+      <div v-else class="w-full bg-black h-[41px] flex items-center justify-center">目前沒有下單紀錄</div>
     </div>
   </div>
 </template>
@@ -313,27 +325,17 @@ export default {
 .animate-outline-fade {
   animation: outlineFade 1s ease-out;
 }
-
 .scroller {
-  height: 416px; /* 給定滾動容器固定高度 */
-  overflow: auto; /* 讓容器有滾動條 */
+  height: 416px;
+  overflow: auto;
   overflow: hidden;
 }
-
 .scroller::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
-
-.user {
-  height: 32px; /* 每個項目的高度 */
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-}
-
-.card {
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+.historyBox::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 </style>
